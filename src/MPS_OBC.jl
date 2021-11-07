@@ -305,17 +305,13 @@ end
 Function to calculate the partial contractions needed to form the effective Hamiltonian
 """
 function setup_R(H::MPO{T1}, mps::MPS{T2}) where {T1,T2}
-    N = length(H)
-    if (T1 <: T2)
-        entrytype = T2
-    else
-        entrytype = T1
-    end
-    LR = Vector{Array{entrytype,3}}(undef, N + 1)
+    N = length(H)    
+    Tres =  Base.return_types(*, (T1, T2))[1]
+    LR = Vector{Array{Tres,3}}(undef, N + 1)
 
     # We need only N-1 partial contractions, however, we set the edges to dummy values 1 that we can recoursivly compute every computation resuing the others
-    LR[1] = ones(entrytype, 1, 1, 1)
-    LR[N + 1] = ones(entrytype, 1, 1, 1)
+    LR[1] = ones(Tres, 1, 1, 1)
+    LR[N + 1] = ones(Tres, 1, 1, 1)
 
     # Now compute the partial contractions starting from the right (as I start sweeping on the left in the ground state search)
     for i = N:-1:2
@@ -330,7 +326,7 @@ end
 """
   update_left(LR, M_left::Site, M_right::Site, W::Operator)
     
-Function to perform an update the partial contractions starting from the left stored in LR 
+Function to perform an update the partial contractions required for iterative ground state search starting from the left stored in LR 
 """
 function update_left(LR, M_left::Site, M_right::Site, W::Operator)
     res = contract_tensors(LR, [3], M_right, [1])
@@ -342,8 +338,8 @@ end
 
 """
   update_right(LR, M_left::Site, M_right::Site, W::Operator)
-    
-Function to perform an update the partial contractions starting from the left stored in LR 
+
+Function to perform an update the partial contractions required for iterative ground state search starting from the right stored in LR 
 """
 function update_right(LR, M_left::Site, M_right::Site, W::Operator)
     res = contract_tensors(LR, [3], M_right, [2])
@@ -362,79 +358,15 @@ function apply_operator(operator::MPO{T1}, mps::MPS{T2})::MPS where {T1,T2}
     N = length(mps)
   
     # Generate a new MPS of the correct type
-    Tres =  Base.return_types(*, (T1, T2))[1]    
+    Tres =  Base.return_types(*, (T1, T2))[1]
     res = MPS{Tres}(undef, N)
     
     # Apply Hamilton to MPS and generate new MPS
     for i = 1:N
         temp = contract_tensors(operator[i], [4], mps[i], [3])
-        temp = permutedims(temp, (1,4,2,5,3))
+        temp = permutedims(temp, (1, 4, 2, 5, 3))
         dim1, dim2, dim3, dim4, dim5 = size(temp)
         res[i] = reshape(temp, (dim1 * dim2, dim3 * dim4, dim5))
     end
     return res
 end
-
-"""
-   approximate_mps(D::Int64,mps0::MPS{T},acc::Float64)::MPS{T}
-
-Function to calculate an approximate MPS with bond dimension D to a given MPS mps0 such that ||mps - mps0||_2 -> min
-"""
-function approximate_mps(D::Int64, mps0::MPS{T}, acc::Float64)::MPS{T} where T
-    # Number of spins
-    N = length(mps0)
-    # Physical dimension
-    d = size(mps0{1}, 3)
-
-    # Initial guess for MPS
-    mps = random_mps_obc(N, D, d, T)
-    # Right normlised form
-    gaugeMPS!(mps, :right)
-
-    # Initialise L and R
-    LR = initialise(mps0, mps)
-
-    # Optimization
-    num_of_sweeps = 0
-    dev_old = 0
-    alldevs = zeros(2 * N - 2, 1)
-
-    while (1)    
-        num_of_sweeps = num_of_sweeps + 1
-        println("Sweep ", num_of_sweeps)
-        count = 1
-
-        # Sweep form left to right
-        for i = 1:N - 1
-	      Left = LR[i]
-	      Right = LR[i + 1]
-	      temp = contract_tensors(Right, [1], mps0[i], [2])
-	      mps[i] = contract_tensors(Left, [2], temp, [2])
-	      alldevs[count] = check_accu(mps[i])
-	      _, mps[i] = gauge_site(mps[i], :left)  
-	      LR[i + 1] = update_left(Left, mps[i], mps0[i])
-	      count = count + 1
-        end
-
-        # Sweep form right to left
-        for i = N:-1:2
-            Left = LR[i]
-            Right = LR[i + 1]
-            temp = contract_tensors(Right, [1], mps0[i], [2])
-            mps[i] = contract_tensors(Left, [2], temp, [2])
-            alldevs[count] = check_accu(mps[i])
-            A, mps[i] = gauge_site(mps[i], :right)    
-            LR[i] = update_right(Right, mps0[i], mps[i])
-            count = count + 1
-        end
-
-        if (std(alldevs) / abs(mean(alldevs)) < acc)
-	        break
-        end      
-    end
-    # Restore normalisation
-    mps[1] = permute(contract_tensors(mps[1], [2], A, [1]), [1;3;2])
-    
-    return mps
-end
-
