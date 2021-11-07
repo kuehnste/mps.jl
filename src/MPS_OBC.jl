@@ -27,7 +27,7 @@ The convention for the 3 index tensors is that the first two are the virtual one
 """
 function random_mps_obc(N::Int, D::Int, d, tensortype::Type{T}=ComplexF64)::MPS{T} where T
     # Ensure the the system size is at least two
-    @assert(N>1)
+    @assert(N > 1)
 
     # Initialize
     mps = Array{Site{T}}(undef, N)
@@ -122,7 +122,7 @@ normalized. This function overwrites the input MPS with its gauged version
 """
 function gaugeMPS!(mps::MPS, direction::Symbol=:right, normalize::Bool=false)
     # Check that we got a meaningful direction
-    if (direction!=:left && direction!=right)
+    if (direction != :left && direction != :right)
         throw(ArgumentError("direction must be :left or :right, got $(repr(direction))"))
     end
     # Start gauging
@@ -362,18 +362,15 @@ function apply_operator(operator::MPO{T1}, mps::MPS{T2})::MPS where {T1,T2}
     N = length(mps)
   
     # Generate a new MPS of the correct type
-    if (T1 <: T2)
-        res = MPS{T2}(undef, N)
-    else
-        res = MPS{T1}(undef, N)
-    end     
-
+    Tres =  Base.return_types(*, (T1, T2))[1]    
+    res = MPS{Tres}(undef, N)
+    
     # Apply Hamilton to MPS and generate new MPS
     for i = 1:N
-        temp = contract(operator[i], [4], mps[i], [3])
-        temp = permute(temp, [1 4 2 5 3])
+        temp = contract_tensors(operator[i], [4], mps[i], [3])
+        temp = permutedims(temp, (1,4,2,5,3))
         dim1, dim2, dim3, dim4, dim5 = size(temp)
-        res[i] = reshape(temp, [dim1 * dim2, dim3 * dim4, dim5])
+        res[i] = reshape(temp, (dim1 * dim2, dim3 * dim4, dim5))
     end
     return res
 end
