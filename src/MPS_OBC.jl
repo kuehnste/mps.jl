@@ -78,7 +78,6 @@ function calculate_overlap(mps1::MPS, mps2::MPS)::Number
     return overlap[1]
 end
 
-
 """
    expectation_value(mps::MPS, mpo::MPO)::Number
    
@@ -352,7 +351,7 @@ end
 """
   apply_operator(operator::MPO{T1}, mps::MPS{T2})::MPS where {T1,T2}
     
-Apply an opterator given as MPO to an MPS
+Apply an operator given as MPO to an MPS. The resulting MPS will have a bond dimension that is the product of the bond dimensions of the MPS and the MPO.
 """
 function apply_operator(operator::MPO{T1}, mps::MPS{T2})::MPS where {T1,T2}
     N = length(mps)
@@ -361,12 +360,36 @@ function apply_operator(operator::MPO{T1}, mps::MPS{T2})::MPS where {T1,T2}
     Tres =  Base.return_types(*, (T1, T2))[1]
     res = MPS{Tres}(undef, N)
     
-    # Apply Hamilton to MPS and generate new MPS
+    # Apply the MPO to the MPS and generate new MPS
     for i = 1:N
         temp = contract_tensors(operator[i], [4], mps[i], [3])
         temp = permutedims(temp, (1, 4, 2, 5, 3))
         dim1, dim2, dim3, dim4, dim5 = size(temp)
         res[i] = reshape(temp, (dim1 * dim2, dim3 * dim4, dim5))
+    end
+    return res
+end
+
+"""
+  apply_operator(op1::MPO{T1}, op2::MPO{T2})::MPO where {T1,T2}
+    
+Multiply two MPOs together to get an expression for op2 * op1 in MPO form. The resulting MPS will have a bond dimension that is the product of the bond dimensions of both MPOs.
+"""
+function apply_operator(op1::MPO{T1}, op2::MPO{T2})::MPS where {T1,T2}
+    N1 = length(op1)
+    N2 = length(mpo)
+    assert(N1==N2)
+  
+    # Generate a new MPS of the correct type
+    Tres =  Base.return_types(*, (T1, T2))[1]
+    res = MPO{Tres}(undef, N)
+    
+    # Apply Hamilton to MPS and generate new MPS
+    for i = 1:N1
+        temp = contract_tensors(op2[i], [4], op1[i], [3])
+        temp = permutedims(temp, (1, 4, 2, 5, 3, 6))
+        dim1, dim2, dim3, dim4, dim5, dim6 = size(temp)
+        res[i] = reshape(temp, (dim1 * dim2, dim3 * dim4, dim5, dim6))
     end
     return res
 end
