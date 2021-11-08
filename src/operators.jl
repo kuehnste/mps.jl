@@ -31,7 +31,7 @@ function getHeisenbergMPO(N::Int, J::Real, lambda::Real)
     first_tensor = zeros(ComplexF64, 1, 5, 2, 2)
     tensor = zeros(ComplexF64, 5, 5, 2, 2)
     last_tensor = zeros(ComplexF64, 5, 1, 2, 2)
-    HeisenbergMPO = Array{Operator}(undef, N)
+    HeisenbergMPO = MPO{ComplexF64}(undef, N)
 
     # First MPO tensor
     first_tensor[1,1,:,:] = -lambda * Z
@@ -76,12 +76,12 @@ Function to generate the MPO for the Ising Hamilton of the form -J * sum_{i)X^i 
 """
 function getIsingMPO(N::Int, J::Real, lambda::Real)
     # Provide the Pauli matrices
-    Id, X, Y, Z = getPauliMatrices()
+    Id, X, _, Z = getPauliMatrices()
     # Initialize single tensor as complex array and the MPO as an array holding those
-    first_tensor = zeros(ComplexF64, 1, 5, 2, 2)
-    tensor = zeros(ComplexF64, 5, 5, 2, 2)
-    last_tensor = zeros(ComplexF64, 5, 1, 2, 2)
-    IsingMPO = MPO{ComplexF64}(undef, N)
+    first_tensor = zeros(Float64, 1, 5, 2, 2)
+    tensor = zeros(Float64, 5, 5, 2, 2)
+    last_tensor = zeros(Float64, 5, 1, 2, 2)
+    IsingMPO = MPO{Float64}(undef, N)
 
     # First MPO tensor
     first_tensor[1,1,:,:] = Id
