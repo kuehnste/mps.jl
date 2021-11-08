@@ -78,6 +78,7 @@ function calculate_overlap(mps1::MPS, mps2::MPS)::Number
     return overlap[1]
 end
 
+
 """
    expectation_value(mps::MPS, mpo::MPO)::Number
    
@@ -100,6 +101,7 @@ function expectation_value(mps::MPS, mpo::MPO)::Number
     return val[1]    
 end
 
+
 """
     gaugeMPS(mps::MPS{T}, direction::Symbol=:right, normalize::Bool=false)::MPS{T}
     
@@ -112,6 +114,7 @@ function gaugeMPS(mps::MPS{T}, direction::Symbol=:right, normalize::Bool=false):
     gaugeMPS!(mps, direction, normalize)    
     return mps_gauged
 end
+
 
 """
     gaugeMPS!(mps::MPS,direction::Dir=right,)
@@ -156,6 +159,7 @@ function gaugeMPS!(mps::MPS, direction::Symbol=:right, normalize::Bool=false)
         end
     end
 end
+
 
 """
   gauge_site(A::Site{T}, direction::Dir)::Tuple{Site{T},Matrix{T}} where T
@@ -298,6 +302,7 @@ function solve_eigenvalue_problem(Left, Right, W)
     return real(E_local[1]), M
 end
 
+
 """
     setup_R(H::MPO{T1},mps::MPS{T2}) where {T1,T2}
     
@@ -322,6 +327,7 @@ function setup_R(H::MPO{T1}, mps::MPS{T2}) where {T1,T2}
     return LR
 end
 
+
 """
   update_left(LR, M_left::Site, M_right::Site, W::Operator)
     
@@ -335,6 +341,7 @@ function update_left(LR, M_left::Site, M_right::Site, W::Operator)
     return res
 end
 
+
 """
   update_right(LR, M_left::Site, M_right::Site, W::Operator)
 
@@ -347,6 +354,7 @@ function update_right(LR, M_left::Site, M_right::Site, W::Operator)
 
     return res
 end
+
 
 """
   apply_operator(operator::MPO{T1}, mps::MPS{T2})::MPS where {T1,T2}
@@ -372,6 +380,7 @@ function apply_operator(operator::MPO{T1}, mps::MPS{T2})::MPS where {T1,T2}
     return res
 end
 
+
 """
   apply_operator!(operator::MPO{T1}, mps::MPS{T2})::MPS where {T1,T2}
     
@@ -390,6 +399,7 @@ function apply_operator!(operator::MPO, mps::MPS)
         mps[i] = reshape(temp, (dim1 * dim2, dim3 * dim4, dim5))
     end
 end
+
 
 """
   apply_operator(op1::MPO{T1}, op2::MPO{T2})::MPO where {T1,T2}
@@ -414,6 +424,7 @@ function apply_operator(op1::MPO{T1}, op2::MPO{T2})::MPO where {T1,T2}
     end
     return res
 end
+
 
 """
   sum_operators(op1::MPO{T1}, op2::MPO{T2})::MPO where {T1,T2}
