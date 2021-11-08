@@ -393,3 +393,60 @@ function apply_operator(op1::MPO{T1}, op2::MPO{T2})::MPO where {T1,T2}
     end
     return res
 end
+
+"""
+  sum_operators(op1::MPO{T1}, op2::MPO{T2})::MPO where {T1,T2}
+    
+Add two MPOs together to get an expression for op2 + op1 in MPO form. The resulting MPS will have a bond dimension that is the sum of the bond dimensions of both MPOs.
+"""
+function sum_operators(op1::MPO{T1}, op2::MPO{T2})::MPO where {T1,T2}
+    N1 = length(op1)
+    N2 = length(op2)
+    @assert(N1 == N2)
+  
+    # Generate a new MPO of the correct type
+    Tres =  Base.return_types(+, (T1, T2))[1]
+    res = MPO{Tres}(undef, N1)
+    
+    # The first site needs special treatment
+    tensor1 = op1[1]
+    tensor2 = op2[1]
+    _, Dr1, dr1, dc1 = size(tensor1)
+    _, Dr2, dr2, dc2 = size(tensor2)    
+    new_tensor = zeros(Tres, 1, Dr1 + Dr2, dr1, dc1)
+    for r = 1:dr1
+        for c = 1:dc1
+            new_tensor[1,:,r,c] = [tensor1[1:1,:,r,c] tensor2[1:1,:,r,c]]
+        end
+        res[1] = new_tensor
+    end        
+    # The tensors in between
+    for i = 2:N1 - 1
+        tensor1 = op1[i]
+        tensor2 = op2[i]
+        Dl1, Dr1, dr1, dc1 = size(tensor1)
+        Dl2, Dr2, dr2, dc2 = size(tensor2)        
+        new_tensor = zeros(Tres, Dl1 + Dl2, Dr1 + Dr2, dr1, dc1)
+        for r = 1:dr1
+            for c = 1:dc1
+                new_tensor[1:Dl1,1:Dr1,r,c] = tensor1[:,:,r,c]
+                new_tensor[Dl1 + 1:end,Dr1 + 1:end,r,c] = tensor2[:,:,r,c]
+            end
+        end
+        res[i] = new_tensor
+    end
+    # The last site needs special treatment
+    tensor1 = op1[N1]
+    tensor2 = op2[N1]
+    Dl1, _, dr1, dc1 = size(tensor1)
+    Dl2, _, dr2, dc2 = size(tensor2)    
+    new_tensor = zeros(Tres, Dl1 + Dl2, 1, dr1, dc1)
+    for r = 1:dr1
+        for c = 1:dc1
+            new_tensor[:,1,r,c] = [tensor1[:,1,r,c]; tensor2[:,1,r,c]]
+        end
+    end        
+    res[N1] = new_tensor
+
+    return res
+end
