@@ -373,6 +373,25 @@ function apply_operator(operator::MPO{T1}, mps::MPS{T2})::MPS where {T1,T2}
 end
 
 """
+  apply_operator!(operator::MPO{T1}, mps::MPS{T2})::MPS where {T1,T2}
+    
+Apply an operator given as MPO to an MPS. The resulting MPS will have a bond dimension that is the product of the bond dimensions of the MPS and the MPO. The input will be overwritten by the result. This requires that the type of the elements of the input MPS is able to accomodate the result of multiplying the MPO tensors into the MPS tensors (e.g. applying a complex MPO to a real MPS cannot be done inpalce as the result will be complex)
+"""
+function apply_operator!(operator::MPO, mps::MPS)
+    N1 = length(mps)
+    N2 = length(operator)
+    @assert(N1 == N2)
+    
+    # Contract the tensors for each site
+    for i = 1:N1
+        temp = contract_tensors(operator[i], [4], mps[i], [3])
+        temp = permutedims(temp, (1, 4, 2, 5, 3))
+        dim1, dim2, dim3, dim4, dim5 = size(temp)
+        mps[i] = reshape(temp, (dim1 * dim2, dim3 * dim4, dim5))
+    end
+end
+
+"""
   apply_operator(op1::MPO{T1}, op2::MPO{T2})::MPO where {T1,T2}
     
 Multiply two MPOs together to get an expression for op2 * op1 in MPO form. The resulting MPS will have a bond dimension that is the product of the bond dimensions of both MPOs.
