@@ -63,7 +63,6 @@ end
     end
 end
 
-
 @testset "Summing MPOs" begin
     for N = 10:2:20
         # Prepare a random MPS and gauge it
