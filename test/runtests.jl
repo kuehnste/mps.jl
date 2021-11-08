@@ -38,3 +38,45 @@ end
         end      
     end    
 end
+
+@testset "Inplace operator application" begin
+    # Check that we get an error, if we try to overwrite a real MPS with a complex MPO
+    mps = random_mps_obc(10, 9, 2, Float64)
+    H = getHeisenbergMPO(10, 1, 1)
+    @test_throws InexactError apply_operator!(H, mps)
+
+    # Compute result of the contraction and store in a new MPS, compare it with result of inplace contraction
+    for N = 10:2:20
+        # Prepare a random MPS and gauge it
+        mps = random_mps_obc(N, 15, 2, ComplexF64)
+        gaugeMPS!(mps, :left, true)
+        # Some MPOs for testing
+        H = getIsingMPO(N, 1.0, 0.9)
+        # Apply the Hamiltonian generating a copy
+        mps_new = apply_operator(H, mps)
+        gaugeMPS!(mps_new, :left, true)
+        # Now in place
+        apply_operator!(H, mps)
+        gaugeMPS!(mps, :left, true)
+        # Check the expectation values
+        @test isapprox(calculate_overlap(mps, mps_new), 1.0 + 0.0im)
+    end
+end
+
+
+@testset "Summing MPOs" begin
+    for N = 10:2:20
+        # Prepare a random MPS and gauge it
+        mps = random_mps_obc(N, 15, 2, ComplexF64)
+        gaugeMPS!(mps, :left, true)
+        # Some MPOs for testing
+        id_mpo = getIdentityMPO(N, 2)
+        H = getIsingMPO(N, 1.0, 0.9)
+        # Compute sums thereof
+        O1 = sum_operators(id_mpo, H)
+        O2 = sum_operators(H, H)
+        # Check the expectation values
+        @test isapprox(expectation_value(mps, O1), 1.0 + expectation_value(mps, H))
+        @test isapprox(expectation_value(mps, O2), 2.0 * expectation_value(mps, H))
+    end
+end
