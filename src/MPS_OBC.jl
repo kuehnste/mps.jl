@@ -378,13 +378,13 @@ Multiply two MPOs together to get an expression for op2 * op1 in MPO form. The r
 function apply_operator(op1::MPO{T1}, op2::MPO{T2})::MPO where {T1,T2}
     N1 = length(op1)
     N2 = length(op2)
-    @assert(N1==N2)
+    @assert(N1 == N2)
   
     # Generate a new MPS of the correct type
     Tres =  Base.return_types(*, (T1, T2))[1]
     res = MPO{Tres}(undef, N1)
     
-    # Apply Hamilton to MPS and generate new MPS
+    # Contract the tensors for each site
     for i = 1:N1
         temp = contract_tensors(op2[i], [4], op1[i], [3])
         temp = permutedims(temp, (1, 4, 2, 5, 3, 6))
