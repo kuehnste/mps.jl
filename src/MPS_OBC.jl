@@ -63,12 +63,12 @@ end
 Given two mps, compute the overlap <mps1|mps2>.
 """
 function calculate_overlap(mps1::MPS, mps2::MPS)::Number
-  # Make sure, that the two MPS have the same length
+    # Make sure, that the two MPS have the same length
     N1 = length(mps1)
     N2 = length(mps2)
     @assert(N1 == N2)
 
-  # Now compute ther overlap
+    # Now compute ther overlap
     overlap = ones(Float64, 1, 1)
     for i = 1:N1
         overlap = contract_tensors(overlap, [2], mps2[i], [1])
@@ -354,14 +354,16 @@ end
 Apply an operator given as MPO to an MPS. The resulting MPS will have a bond dimension that is the product of the bond dimensions of the MPS and the MPO.
 """
 function apply_operator(operator::MPO{T1}, mps::MPS{T2})::MPS where {T1,T2}
-    N = length(mps)
+    N1 = length(mps)
+    N2 = length(operator)
+    @assert(N1 == N2)
   
-    # Generate a new MPS of the correct type
+    # Generate a new MPO of the correct type
     Tres =  Base.return_types(*, (T1, T2))[1]
-    res = MPS{Tres}(undef, N)
+    res = MPS{Tres}(undef, N1)
     
     # Apply the MPO to the MPS and generate new MPS
-    for i = 1:N
+    for i = 1:N1
         temp = contract_tensors(operator[i], [4], mps[i], [3])
         temp = permutedims(temp, (1, 4, 2, 5, 3))
         dim1, dim2, dim3, dim4, dim5 = size(temp)
