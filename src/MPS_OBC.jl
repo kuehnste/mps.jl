@@ -42,10 +42,10 @@ function random_mps_obc(N::Int, D::Int, d, tensortype::Type{T}=ComplexF64)::MPS{
         @assert(length(dim) == N)
     end
 
-    # Left tensor (row vector)
+    # Left boundary tensor (row vector)
     mps[1] = rand(tensortype, 1, D, dim[1])
 
-    # Right tensor (column vector)
+    # Right boundary tensor (column vector)
     mps[N] = rand(tensortype, D, 1, dim[N])
 
     # Tensors in between
@@ -256,7 +256,7 @@ function find_groundstate(H::Vector{Operator{T}}, D::Int64, d::Int64, acc::Float
 	        break
         elseif (max_sweeps > 0 && num_of_sweeps >= max_sweeps)
 	        E0 = E_local
-	        # Restore normalisation
+	        # Restore normalisation (permutation is needed to bring the indices back into right order after contracting)
 	        mps[1] = contract_tensors(mps[1], [2], res, [1], [1;3;2]) 
 	        warn("Reached maximum number of iterations before convergence to desired accuracy")
 	        break
@@ -313,7 +313,7 @@ function setup_R(H::MPO{T1}, mps::MPS{T2}) where {T1,T2}
     Tres =  Base.return_types(*, (T1, T2))[1]
     LR = Vector{Array{Tres,3}}(undef, N + 1)
 
-    # We need only N-1 partial contractions, however, we set the edges to dummy values 1 that we can recoursivly compute every computation resuing the others
+    # We need only N-1 partial contractions, however, we set the edges to dummy values 1 that we can recursively compute every contraction resuing the previous ones
     LR[1] = ones(Tres, 1, 1, 1)
     LR[N + 1] = ones(Tres, 1, 1, 1)
 
@@ -449,9 +449,9 @@ function sum_operators(op1::MPO{T1}, op2::MPO{T2})::MPO where {T1,T2}
     for r = 1:dr1
         for c = 1:dc1
             new_tensor[1,:,r,c] = [tensor1[1:1,:,r,c] tensor2[1:1,:,r,c]]
-        end
-        res[1] = new_tensor
-    end        
+        end        
+    end
+    res[1] = new_tensor
     # The tensors in between
     for i = 2:N1 - 1
         tensor1 = op1[i]
@@ -477,7 +477,7 @@ function sum_operators(op1::MPO{T1}, op2::MPO{T2})::MPO where {T1,T2}
         for c = 1:dc1
             new_tensor[:,1,r,c] = [tensor1[:,1,r,c]; tensor2[:,1,r,c]]
         end
-    end        
+    end
     res[N1] = new_tensor
 
     return res
