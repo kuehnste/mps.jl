@@ -39,6 +39,24 @@ end
     end    
 end
 
+@testset "Canonical form" begin
+    mps = random_mps_obc(10, 5, 2, ComplexF64)
+    mps_left_gauged = gaugeMPS(mps, :left, true)
+            mps_right_gauged = gaugeMPS(mps, :right, true)
+    # Check the left canonical gauge
+    for i = 1:length(mps_left_gauged)
+        Dr = size(mps_left_gauged[i], 2)
+        res = contract_tensors(conj(mps_left_gauged[i]), [1;3], mps_left_gauged[i], [1;3])
+        @test isapprox(res, Matrix((1.0 + 0.0im) * I, Dr, Dr))
+    end
+    # Check the right canonical gauge
+    for i = 1:length(mps_right_gauged)
+        Dl = size(mps_right_gauged[i], 1)
+        res = contract_tensors(conj(mps_right_gauged[i]), [2;3], mps_right_gauged[i], [2;3])
+        @test isapprox(res, Matrix((1.0 + 0.0im) * I, Dl, Dl))
+    end
+end
+
 @testset "Inplace operator application" begin
     # Check that we get an error, if we try to overwrite a real MPS with a complex MPO
     mps = random_mps_obc(10, 9, 2, Float64)
