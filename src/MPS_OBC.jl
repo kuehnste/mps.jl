@@ -111,7 +111,7 @@ If normalize is set to true, the resulting state will be normalized.
 """
 function gaugeMPS(mps::MPS{T}, direction::Symbol=:right, normalize::Bool=false)::MPS{T} where T    
     mps_gauged = deepcopy(mps)
-    gaugeMPS!(mps, direction, normalize)    
+    gaugeMPS!(mps_gauged, direction, normalize)    
     return mps_gauged
 end
 
