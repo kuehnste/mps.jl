@@ -97,3 +97,33 @@ end
         @test isapprox(expectation_value(mps, O2), 2.0 * expectation_value(mps, H))
     end
 end
+
+@testset "Test entropy computation" begin
+    # A product state should always have vanishing entropy
+    mps = random_mps_obc(10, 1, 2)
+    gaugeMPS!(mps, :left, true)
+    for i = 1:length(mps)        
+        @test abs(compute_entropy(mps, i)) < 1E-12
+    end
+    @test abs(compute_entropy(mps)) < 1E-12
+
+    # Now prepare the GHZ state
+    all_zeros = product_state_obc(BitArray(zeros(Int8, 10)))
+    all_ones = product_state_obc(BitArray(ones(Int8, 10)))
+    mps = sum_states(all_zeros, all_ones)
+    gaugeMPS!(mps, :left, true)
+    for i = 1:length(mps) - 1
+        @test isapprox(compute_entropy(mps, i), 1.0)        
+    end
+
+    # Compare the entropy computation with the default argument to what one would expect
+    mps = random_mps_obc(11, 4, 3)
+    entropy1 = compute_entropy(mps)
+    entropy2 = compute_entropy(mps, 6)
+    @test isapprox(entropy1, entropy2)
+
+    mps = random_mps_obc(8, 6, 3)
+    entropy1 = compute_entropy(mps)
+    entropy2 = compute_entropy(mps, 4)
+    @test isapprox(entropy1, entropy2)
+end

@@ -10,6 +10,6 @@ export getPauliMatrices, getIsingMPO, getHeisenbergMPO, getTotalSpinMPO, getIden
 
 # Methods implementing the MPS algorithm with open boundary conditions
 include("MPS_OBC.jl")
-export Site, MPS, Operator, MPO, random_mps_obc, calculate_overlap, expectation_value, gaugeMPS, gaugeMPS!, apply_operator, apply_operator!, sum_operators, find_groundstate, approximate_mps
+export Site, MPS, Operator, MPO, random_mps_obc, product_state_obc, calculate_overlap, expectation_value, gaugeMPS, gaugeMPS!, apply_operator, apply_operator!, sum_states, sum_operators, find_groundstate, approximate_mps, compute_entropy
 
 end # module

@@ -482,3 +482,52 @@ function sum_operators(op1::MPO{T1}, op2::MPO{T2})::MPO where {T1,T2}
 
     return res
 end
+
+
+"""
+  compute_entropy(mps::MPS, n:Int)::Float64
+
+Compute the von Neumann along for the bipartion of the sites into two subsets A={1,...,n} and B={n+1,...,N} where N is the length of the MPS. If n<=0 is supplied, a bipartion of into A. For the result to make sense, mps has to be a normalized quantum state.
+"""
+function compute_entropy(mps::MPS{T}, n::Int=0)::Float64 where T
+    # Extact the length and check if the given position is reasonable
+    N = length(mps)
+    @assert(n <= N)
+    
+    # The entropy of the entire state is simply zero since it is a pure state, so nothing to compute
+    if n == N        
+        return 0.0
+    end
+
+    # In case a value n<=0 is given, we assume the bipartion is taken in the center
+    if n <= 0
+        n = Int(round(N / 2))
+    end
+
+    # Get a copy of the input
+    mps_loc = deepcopy(mps)
+
+    # Put the sites left to n into left canonical gauge    
+    M = mps_loc[1]
+    for i = 1:n
+        mps_loc[i], res = gauge_site(M, :left)
+        M = contract_tensors(res, [2], mps_loc[i + 1], [1])        
+    end    
+    mps_loc[n+1] = M    
+
+    # Now start contracting from the right boundary to obtain the reduced density operator 
+    rdm = ones(T, 1, 1)
+    for i = N:-1:n+1
+        rdm = contract_tensors(rdm, [2], mps_loc[i], [2])        
+        rdm = contract_tensors(conj(mps_loc[i]), [2;3], rdm, [1;3])        
+    end
+
+    # Now diagonalize the reduced density matrix and compute the entropy    
+    ev = real(eigvals(rdm))
+    # Eigenvalues that are numerically zero sometimes become -1E-16, to prevent problems with the logarithm we filter them
+    ev = filter(x -> x > 0.0, ev)
+    # The von Neumann entropy for the reduced density operator
+    entropy = -sum(ev .* log2.(ev))
+  
+    return entropy
+end
