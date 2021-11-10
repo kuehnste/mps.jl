@@ -56,6 +56,30 @@ function random_mps_obc(N::Int, D::Int, d, tensortype::Type{T}=ComplexF64)::MPS{
     return mps
 end
 
+"""
+    basis_state_obc(configuration::Vector{<:Int}, d::Int=2)::MPS
+
+Prepare the a product state corresponding the computational basis state |configuration> on N qubits where configuration is an Array containing N elements from 1 to d.
+"""
+function basis_state_obc(configuration::Vector{<:Int}, d::Int=2)::MPS{Float64}
+    # Some error checking
+    if any(x-> (x < 1 || x > d), configuration)
+        throw(ArgumentError("configuration must contain integer elements in the range from 1 to d, got d=$(repr(d)), configuration=$(repr(configuration))"))
+    end
+    # Generate the MPS
+    N = length(configuration)
+    psi = MPS{Float64}(undef, N)
+    tensors = Vector{Array{Float64,3}}(undef,d)
+    for i=1:d
+        tmp = zeros(Float64, 1, 1, d)
+        tmp[1,1,i] = 1.0
+        tensors[i] = tmp
+    end
+    for i = 1:N        
+        psi[i] = tensors[configuration[i]]        
+    end
+    return psi
+end
 
 """
     calculate_overlap(mps1::MPS,mps2::MPS)::Number
