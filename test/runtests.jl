@@ -81,6 +81,19 @@ end
     end
 end
 
+@testset "Summing MPSs" begin
+    for N = 10:2:20
+        # Prepare a random MPS and gauge it
+        mps = random_mps_obc(N, 15, 2, ComplexF64)
+        gaugeMPS!(mps, :left, true)
+        # Sum it with itself
+        mps2 = sum_states(mps, mps)        
+        # Check the expectation values
+        @test isapprox(calculate_overlap(mps2, mps), 2.0)
+        @test isapprox(calculate_overlap(mps2, mps2), 4.0)
+    end
+end
+
 @testset "Summing MPOs" begin
     for N = 10:2:20
         # Prepare a random MPS and gauge it
