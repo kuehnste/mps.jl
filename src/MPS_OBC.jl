@@ -503,9 +503,9 @@ end
 
 
 """
-  sum_operators(op1::MPO{T1}, op2::MPO{T2})::MPO where {T1,T2}
+    sum_operators(op1::MPO{T1}, op2::MPO{T2})::MPO where {T1,T2}
     
-Add two MPOs together to get an expression for op2 + op1 in MPO form. The resulting MPS will have a bond dimension that is the sum of the bond dimensions of both MPOs.
+Add two MPOs together to get an expression for op2 + op1 in MPO form. The resulting MPO will have a bond dimension that is the sum of the bond dimensions of both MPOs.
 """
 function sum_operators(op1::MPO{T1}, op2::MPO{T2})::MPO where {T1,T2}
     N1 = length(op1)
