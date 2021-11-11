@@ -664,20 +664,20 @@ end
 """
     sample_from_mps!(mps::MPS)::Vector{Int64}
 
-Generate a sample from the probability distribution of basis states defined by the MPS.
+Generate a sample from the probability distribution of basis states defined by the MPS following A. Ferris, G. Vidal, PRB 85 165146 (2021). The input MPS will be put in right canoncial gauge and normalized.
 """
 function sample_from_mps!(mps::MPS)::Vector{Int64}
     # Extact the length and check if the given position is reasonable
     N = length(mps)
-    sample = zeros()
+    res = zeros(Int64, N)
 
     # Put the state into right canonical gauge and make sure it is normalized
     gaugeMPS!(mps, :right, true)
-
-    res = zeros(Int64, N)
-    M = mps[1][1,:,:]
+    
+    # Now sample from the MPS
     A = 0
     p = 0
+    M = mps[1][1,:,:]    
     for i = 1:N
         d = size(M, 2)
         pacc = 0
@@ -706,7 +706,7 @@ end
 """
     sample_from_mps(mps::MPS)::Vector{Int64}
 
-Generate a sample from the probability distribution of basis states defined by the MPS.
+Generate a sample from the probability distribution of basis states defined by the MPS following A. Ferris, G. Vidal, PRB 85 165146 (2021). 
 """
 function sample_from_mps(mps::MPS)::Vector{Int64}
     return sample_from_mps!(deepcopy(mps))
