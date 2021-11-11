@@ -186,7 +186,7 @@ end
 
 
 """
-  gauge_site(A::Site{T}, direction::Dir)::Tuple{Site{T},Matrix{T}} where T
+    gauge_site(A::Site{T}, direction::Dir)::Tuple{Site{T},Matrix{T}} where T
 
 Bring a single tensor A of an MPS with OBC in canonical form
 direction tells, whether it will be left or right normalized
@@ -405,7 +405,7 @@ end
 
 
 """
-  update_left(LR, M_left::Site, M_right::Site, W::Operator)
+    update_left(LR, M_left::Site, M_right::Site, W::Operator)
     
 Function to perform an update the partial contractions required for iterative ground state search starting from the left stored in LR 
 """
@@ -419,7 +419,7 @@ end
 
 
 """
-  update_right(LR, M_left::Site, M_right::Site, W::Operator)
+    update_right(LR, M_left::Site, M_right::Site, W::Operator)
 
 Function to perform an update the partial contractions required for iterative ground state search starting from the right stored in LR 
 """
@@ -433,7 +433,7 @@ end
 
 
 """
-  apply_operator(operator::MPO{T1}, mps::MPS{T2})::MPS where {T1,T2}
+    apply_operator(operator::MPO{T1}, mps::MPS{T2})::MPS where {T1,T2}
     
 Apply an operator given as MPO to an MPS. The resulting MPS will have a bond dimension that is the product of the bond dimensions of the MPS and the MPO.
 """
@@ -458,7 +458,7 @@ end
 
 
 """
-  apply_operator!(operator::MPO{T1}, mps::MPS{T2})::MPS where {T1,T2}
+    apply_operator!(operator::MPO{T1}, mps::MPS{T2})::MPS where {T1,T2}
     
 Apply an operator given as MPO to an MPS. The resulting MPS will have a bond dimension that is the product of the bond dimensions of the MPS and the MPO. The input will be overwritten by the result. This requires that the type of the elements of the input MPS is able to accomodate the result of multiplying the MPO tensors into the MPS tensors (e.g. applying a complex MPO to a real MPS cannot be done inpalce as the result will be complex)
 """
@@ -478,7 +478,7 @@ end
 
 
 """
-  apply_operator(op1::MPO{T1}, op2::MPO{T2})::MPO where {T1,T2}
+    apply_operator(op1::MPO{T1}, op2::MPO{T2})::MPO where {T1,T2}
     
 Multiply two MPOs together to get an expression for op2 * op1 in MPO form. The resulting MPS will have a bond dimension that is the product of the bond dimensions of both MPOs.
 """
@@ -676,7 +676,7 @@ function sample_from_mps!(mps::MPS)::Vector{Int64}
     
     # Now sample from the MPS
     A = 0
-    p = 0
+    p = 0.0
     M = mps[1][1,:,:]    
     for i = 1:N
         d = size(M, 2)
@@ -698,7 +698,7 @@ function sample_from_mps!(mps::MPS)::Vector{Int64}
         end
         if i < N
             # Contract the result into the next tensor
-            M = contract_tensors(1/sqrt(real(p[1])) * A, [1], mps[i+1], [1])
+            M = contract_tensors(1 / sqrt(real(p[1])) * A, [1], mps[i + 1], [1])
         end
     end
     return res
