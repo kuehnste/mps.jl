@@ -2,10 +2,6 @@ using Test
 using LinearAlgebra
 using MatrixProductStates
 
-##############################################################
-#   Test the generation and normalization of an random MPS   #
-##############################################################
-
 @testset "Random MPS and basis states" begin
     # Use left canonical form
     for N = 10:2:20
