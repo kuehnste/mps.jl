@@ -194,7 +194,7 @@ end
     all_ones = basis_state_obc(2 * ones(Int64, 10))
     mps = sum_states(all_zeros, all_ones)
     gaugeMPS!(mps, :left, true)
-for i = 1:length(mps) - 1
+    for i = 1:length(mps) - 1
         @test isapprox(compute_entropy(mps, i), 1.0)        
     end
     
@@ -208,4 +208,44 @@ for i = 1:length(mps) - 1
     entropy1 = compute_entropy(mps)
     entropy2 = compute_entropy(mps, 4)
     @test isapprox(entropy1, entropy2)
+end
+
+@testset "Sampling from an MPS" begin    
+    # Some experiments with product states for which the outcome has to be deterministic
+    for N = 4:6
+        configuration = rand([1;2;3], N)
+        mps = basis_state_obc(configuration, 3)
+        for i=1:10
+            sample = sample_from_mps(mps)
+            @test isequal(sample, configuration)
+        end        
+    end
+
+    # Now prepare the GHZ state
+    all_zeros = basis_state_obc(ones(Int64, 4))
+    all_ones = basis_state_obc(2 * ones(Int64, 4))
+    mps_ghz = sum_states(all_zeros, all_ones)
+    gaugeMPS!(mps_ghz, :left, true)
+    prob = zeros(2)
+    nsamples = 100000
+    # Check the outcome for the first 10 samples
+    for i=1:10
+        sample = sample_from_mps(mps_ghz)
+        @test (sample == [1;1;1;1] || sample == [2;2;2;2])
+        if sample == [1;1;1;1]
+            prob[1] += 1
+        else
+            prob[2] += 1
+        end
+    end
+    # For efficiency do not check the other ones anymore
+    for i=11:nsamples
+        sample = sample_from_mps(mps_ghz)
+        if sample == [1;1;1;1]
+            prob[1] += 1
+        else
+            prob[2] += 1
+        end
+    end    
+    @test (sum(abs.(prob./nsamples - 0.5*ones(2))) < 1E-2)
 end

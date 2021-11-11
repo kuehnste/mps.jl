@@ -264,7 +264,7 @@ function contract_virtual_indices(mpo::MPO)::Matrix{<:Number}
     res = permutedims(res, [collect(1:2:ndims(res));collect(2:2:ndims(res))])
 
     # Now reshape the result accordingly
-    d = 2^Int(round(ndims(res)/2))
+    d = 2^Int(round(ndims(res) / 2))
     res = reshape(res, (d, d))
 
     return res
@@ -613,7 +613,7 @@ end
 
 
 """
-  compute_entropy(mps::MPS, n:Int)::Float64
+    compute_entropy(mps::MPS, n:Int)::Float64
 
 Compute the von Neumann along for the bipartion of the sites into two subsets A={1,...,n} and B={n+1,...,N} where N is the length of the MPS. If n<=0 is supplied, a bipartion of into A. For the result to make sense, mps has to be a normalized quantum state.
 """
@@ -658,4 +658,56 @@ function compute_entropy(mps::MPS{T}, n::Int=0)::Float64 where T
     entropy = -sum(ev .* log2.(ev))
   
     return entropy
+end
+
+
+"""
+    sample_from_mps!(mps::MPS)::Vector{Int64}
+
+Generate a sample from the probability distribution of basis states defined by the MPS.
+"""
+function sample_from_mps!(mps::MPS)::Vector{Int64}
+    # Extact the length and check if the given position is reasonable
+    N = length(mps)
+    sample = zeros()
+
+    # Put the state into right canonical gauge and make sure it is normalized
+    gaugeMPS!(mps, :right, true)
+
+    res = zeros(Int64, N)
+    M = mps[1][1,:,:]
+    A = 0
+    p = 0
+    for i = 1:N
+        d = size(M, 2)
+        pacc = 0
+        r = rand()
+        for l = 1:d
+            # Prepare the basis state
+            basis_state = zeros(d)
+            basis_state[l] = 1.0
+            # Contract it into the tensor
+            A = contract_tensors(M, [2], basis_state, [1])
+            p = contract_tensors(conj(A), [1], A, [1])
+            pacc += real(p[1])            
+            if r < pacc
+                res[i] = l
+                break
+            end
+        end
+        if i < N
+            # Contract the result into the next tensor
+            M = contract_tensors(1/sqrt(real(p[1])) * A, [1], mps[i+1], [1])
+        end
+    end
+    return res
+end
+
+"""
+    sample_from_mps(mps::MPS)::Vector{Int64}
+
+Generate a sample from the probability distribution of basis states defined by the MPS.
+"""
+function sample_from_mps(mps::MPS)::Vector{Int64}
+    return sample_from_mps!(deepcopy(mps))
 end
