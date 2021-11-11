@@ -63,14 +63,14 @@ Prepare the a product state corresponding |configuration> on N sites where confi
 """
 function basis_state_obc(configuration::Vector{<:Int}, d::Int=2)::MPS{Float64}
     # Some error checking
-    if any(x-> (x < 1 || x > d), configuration)
+    if any(x -> (x < 1 || x > d), configuration)
         throw(ArgumentError("configuration must contain integer elements in the range from 1 to d, got d=$(repr(d)), configuration=$(repr(configuration))"))
     end
     # Generate the MPS
     N = length(configuration)
     psi = MPS{Float64}(undef, N)
-    tensors = Vector{Array{Float64,3}}(undef,d)
-    for i=1:d
+    tensors = Vector{Array{Float64,3}}(undef, d)
+    for i = 1:d
         tmp = zeros(Float64, 1, 1, d)
         tmp[1,1,i] = 1.0
         tensors[i] = tmp
@@ -231,13 +231,41 @@ function contract_virtual_indices(mps::MPS)::Vector{<:Number}
 
     # Since we deal with open boundary conditions, we drop the dummy indices one on the left (right) boundary for the first (last) tensor manually. We start from the right to have the physical indices in the order compatible with Julia's kronecker product
     res = mps[N][:,1,:]
-    for i=N-1:-1:2
-        res = contract_tensors(res,[ndims(res) - 1],mps[i],[2])
+    for i = N - 1:-1:2
+        res = contract_tensors(res, [ndims(res) - 1], mps[i], [2])
     end
-    res = contract_tensors(res,[ndims(res) - 1],mps[1][1,:,:],[1])
+    res = contract_tensors(res, [ndims(res) - 1], mps[1][1,:,:], [1])
 
     # Now reshape the result accordingly
     res = reshape(res, prod(size(res)))
+
+    return res
+end
+
+
+"""
+    contract_virtual_indices(mps::MPO)::Matrix{<:Number}
+
+Given an MPO contract the virtual indices such that one obtains a dense matrix. The indices are ordered such that they are compatible with the standard Julia kronecker product.
+
+Warning: the object constructed will have exponential memory requirements in terms of the number of sites, use with care!
+"""
+function contract_virtual_indices(mpo::MPO)::Matrix{<:Number}
+    N = length(mpo)
+
+    # Since we deal with open boundary conditions, we drop the dummy indices one on the left (right) boundary for the first (last) tensor manually. We start from the right to have the physical indices in the order compatible with Julia's kronecker product
+    res = mpo[N][:,1,:,:]
+    for i = N - 1:-1:2
+        res = contract_tensors(res, [ndims(res) - 2], mpo[i], [2])
+    end
+    res = contract_tensors(res, [ndims(res) - 2], mpo[1][1,:,:,:], [1])
+
+    # Reshuffle the indices to be compatible with Julia's standard kronecker product
+    res = permutedims(res, [collect(1:2:ndims(res));collect(2:2:ndims(res))])
+
+    # Now reshape the result accordingly
+    d = 2^Int(round(ndims(res)/2))
+    res = reshape(res, (d, d))
 
     return res
 end
@@ -613,11 +641,11 @@ function compute_entropy(mps::MPS{T}, n::Int=0)::Float64 where T
         mps_loc[i], res = gauge_site(M, :left)
         M = contract_tensors(res, [2], mps_loc[i + 1], [1])        
     end    
-    mps_loc[n+1] = M    
+    mps_loc[n + 1] = M
 
     # Now start contracting from the right boundary to obtain the reduced density operator 
     rdm = ones(T, 1, 1)
-    for i = N:-1:n+1
+    for i = N:-1:n + 1
         rdm = contract_tensors(rdm, [2], mps_loc[i], [2])        
         rdm = contract_tensors(conj(mps_loc[i]), [2;3], rdm, [1;3])        
     end

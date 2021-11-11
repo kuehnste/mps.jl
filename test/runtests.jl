@@ -6,7 +6,7 @@ using MatrixProductStates
 #   Test the generation and normalization of an random MPS   #
 ##############################################################
 
-@testset "Random MPS" begin
+@testset "Random MPS and basis states" begin
     # Use left canonical form
     for N = 10:2:20
         mps_real = random_mps_obc(N, 5, 3, Float64)
@@ -24,6 +24,23 @@ using MatrixProductStates
         gaugeMPS!(mps_complex, :right, true)
         @test isapprox(calculate_overlap(mps_real, mps_real), 1.0)
         @test isapprox(calculate_overlap(mps_complex, mps_complex), 1.0 + 0.0im)
+    end
+    
+    # Invalid configurations which should produce an error
+    configuration = [0;1;2;1;2]
+    @test_throws ArgumentError basis_state_obc(configuration)
+    configuration = [1;1;3;1;2]
+    @test_throws ArgumentError basis_state_obc(configuration)
+
+    # Some valid configurations
+    v = Vector{Vector{Float64}}(undef, 3)
+    v[1] = [1.0;0;0]
+    v[2] = [0;1.0;0]
+    v[3] = [0;0;1.0]
+    for N = 4:10
+        configuration = rand([1;2;3], N)
+        mps = basis_state_obc(configuration, 3)
+        @test isapprox(calculate_overlap(mps, mps), 1.0)
     end
 end
 
@@ -111,35 +128,56 @@ end
     end
 end
 
-@testset "Contracting virtual indices of MPS" begin
-    # A MPS representing a simple basis state
-    mps = basis_state_obc([1;2;3;2;1],3)
-    # The basis states as Julia vectors
-    v1 = zeros(3)
-    v1[1] = 1
-    v2 = zeros(3)
-    v2[2] = 1
-    v3 = zeros(3)
-    v3[3] = 1
-    # The exact state vector
-    state_vector = kron(v1,v2,v3,v2,v1)
-    # The state vector obtained from contracting the virtual indices of the MPS
-    state_vector_mps = contract_virtual_indices(mps)
-    # Check if both are equal
-    @test isapprox(state_vector'*state_vector_mps,1.0+0.0im)
+@testset "Basis states and contracting virtual indices of an MPS" begin
+    # Some experiments with product states
+    v = Vector{Vector{Float64}}(undef, 3)
+    v[1] = [1.0;0;0]
+    v[2] = [0;1.0;0]
+    v[3] = [0;0;1.0]
+    for N = 4:10        
+        # A MPS representing a simple basis state
+        configuration = rand([1;2;3], N)
+        mps = basis_state_obc(configuration, 3)
+        # Construct the corresponding state vector
+        state_vector = 1
+        for i = 1:N
+            state_vector = kron(state_vector, v[configuration[i]])
+        end
+        # Compare to the result from the MPS
+        state_vector_mps = contract_virtual_indices(mps)
+        @test isapprox(state_vector' * state_vector_mps, 1.0)
+    end
 
     # Now try with the GHZ state on 10 sites
     all_zeros = basis_state_obc(ones(Int64, 10))
-    all_ones = basis_state_obc(2*ones(Int64, 10))
+    all_ones = basis_state_obc(2 * ones(Int64, 10))
     mps_ghz = sum_states(all_zeros, all_ones)
     gaugeMPS!(mps_ghz, :left, true)
     v1 = zeros(2^10)
     v1[1] = 1
     v2 = zeros(2^10)
     v2[end] = 1
-    state_vector_ghz = 1/sqrt(2)*(v1 + v2)
+    state_vector_ghz = 1 / sqrt(2) * (v1 + v2)
     state_vector_mps = contract_virtual_indices(mps_ghz)
-    @test isapprox(state_vector_ghz'*state_vector_mps,1.0)
+    @test isapprox(state_vector_ghz' * state_vector_mps, 1.0)
+end
+
+@testset "Contracting virtual indices of an MPO" begin
+    # Test with the identity
+    id_mpo = getIdentityMPO(5, 2)
+    id_mpo_matrix = contract_virtual_indices(id_mpo)
+    @test isapprox(id_mpo_matrix, Matrix(1.0I, 2^5, 2^5))
+
+    # A simple instance of the Ising Hamiltonian
+    J = 0.9
+    lambda = 1.1
+    ising_mpo = getIsingMPO(4, J, lambda)
+    Id = [1.0 0;0.0 1.0]
+    X = [0.0 1.0;1.0 0.0]
+    Z = [1.0 0.0;0.0 -1.0]
+    Hising = -J * (kron(X, X, Id, Id) + kron(Id, X, X, Id) + kron(Id, Id, X, X)) - lambda * (kron(Z, Id, Id, Id) + kron(Id, Z, Id, Id) + kron(Id, Id, Z, Id) + kron(Id, Id, Id, Z))
+    Hising_mpo = contract_virtual_indices(ising_mpo)
+    @test isapprox(Hising, Hising_mpo)
 end
 
 @testset "Test entropy computation" begin
@@ -153,13 +191,13 @@ end
 
     # Now prepare the GHZ state
     all_zeros = basis_state_obc(ones(Int64, 10))
-    all_ones = basis_state_obc(2*ones(Int64, 10))
+    all_ones = basis_state_obc(2 * ones(Int64, 10))
     mps = sum_states(all_zeros, all_ones)
     gaugeMPS!(mps, :left, true)
-    for i = 1:length(mps) - 1
+for i = 1:length(mps) - 1
         @test isapprox(compute_entropy(mps, i), 1.0)        
     end
-
+    
     # Compare the entropy computation with the default argument to what one would expect
     mps = random_mps_obc(11, 4, 3)
     entropy1 = compute_entropy(mps)
