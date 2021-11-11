@@ -59,7 +59,7 @@ end
 """
     basis_state_obc(configuration::Vector{<:Int}, d::Int=2)::MPS
 
-Prepare the a product state corresponding the computational basis state |configuration> on N qubits where configuration is an Array containing N elements from 1 to d.
+Prepare the a product state corresponding |configuration> on N sites where configuration is an Array containing N elements from 1 to d. Each site is then initialized in the dth canonical basis state
 """
 function basis_state_obc(configuration::Vector{<:Int}, d::Int=2)::MPS{Float64}
     # Some error checking
