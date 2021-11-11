@@ -17,6 +17,7 @@ function getPauliMatrices()
     return Id, X, Y, Z
 end
 
+
 """
     getHeisenbergMPO(N::Int64,J::Float64,lambda::Float64)
     
@@ -24,7 +25,7 @@ MPO implementation of the Heisenberg Hamiltonian
 H = J * sum_{i) (X^{i} X^{i+1} +Y^{i} Y^{i+1} + Z^{i} Z^{i+1}) + λ * sum_i X^i
 where J, λ have to be real numbers .
 """
-function getHeisenbergMPO(N::Int, J::Real, lambda::Real)
+function getHeisenbergMPO(N::Int, J::Real, lambda::Real)::MPO{ComplexF64}
     # Provide the Pauli matrices
     Id, X, Y, Z = getPauliMatrices()
     # Initialize single tensor as complex array and the MPO as an array holding those
@@ -74,7 +75,7 @@ end
     
 Function to generate the MPO for the Ising Hamilton of the form -J * sum_{i)X^i X^i+1 - lambda * sum_i Z^i.
 """
-function getIsingMPO(N::Int, J::Real, lambda::Real)
+function getIsingMPO(N::Int, J::Real, lambda::Real)::MPO{Float64}
     # Provide the Pauli matrices
     Id, X, _, Z = getPauliMatrices()
     # Initialize single tensor as complex array and the MPO as an array holding those
@@ -110,12 +111,13 @@ function getIsingMPO(N::Int, J::Real, lambda::Real)
     return IsingMPO
 end
 
+
 """
     getTotalSpinMPO(N::Int)
     
 Function to generate the MPO for sum_{i)Z^i.
 """
-function getTotalSpinMPO(N::Int)
+function getTotalSpinMPO(N::Int)::MPO{Float64}
     # Provide the Pauli matrices
     Id, X, Y, Z = getPauliMatrices()
     # Initialize the result
@@ -155,7 +157,7 @@ end
     
 Function to generate the MPO for the Identity which is useful to check contractions and other functions.
 """
-function getIdentityMPO(N::Int, d::Int, tensortype::Type{T}=Float64) where T
+function getIdentityMPO(N::Int, d::Int, tensortype::Type{T}=Float64)::MPO{T} where T
     # Initialize single tensor as complex array and the MPO as an array holding those
     tensor = reshape(Matrix{T}(I, d, d), (1, 1, d, d))
     IdentityMPO = MPO{T}(undef, N)
