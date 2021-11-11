@@ -220,6 +220,30 @@ end
 
 
 """
+    contract_virtual_indices(mps::MPS)::Vector{<:Number}
+
+Given an MPS contract the virtual indices such that one obtains a dense vector. The indices are ordered such that they are compatible with the standard Julia kronecker product.
+
+Warning: the object constructed will have exponential memory requirements in terms of the number of sites, use with care!
+"""
+function contract_virtual_indices(mps::MPS)::Vector{<:Number}
+    N = length(mps)
+
+    # Since we deal with open boundary conditions, we drop the dummy indices one on the left (right) boundary for the first (last) tensor manually. We start from the right to have the physical indices in the order compatible with Julia's kronecker product
+    res = mps[N][:,1,:]
+    for i=N-1:-1:2
+        res = contract_tensors(res,[ndims(res) - 1],mps[i],[2])
+    end
+    res = contract_tensors(res,[ndims(res) - 1],mps[1][1,:,:],[1])
+
+    # Now reshape the result accordingly
+    res = reshape(res, prod(size(res)))
+
+    return res
+end
+
+
+"""
     find_groundstate(H::Array{Operator},D::Int64,acc::Float64,max_sweeps::Int64=-1)
 
 Given a Hamiltonian MPO H, find an MPS approximation for its ground state with bond 

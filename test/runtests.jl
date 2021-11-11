@@ -42,7 +42,7 @@ end
 @testset "Canonical form" begin
     mps = random_mps_obc(10, 5, 2, ComplexF64)
     mps_left_gauged = gaugeMPS(mps, :left, true)
-            mps_right_gauged = gaugeMPS(mps, :right, true)
+    mps_right_gauged = gaugeMPS(mps, :right, true)
     # Check the left canonical gauge
     for i = 1:length(mps_left_gauged)
         Dr = size(mps_left_gauged[i], 2)
@@ -111,6 +111,37 @@ end
     end
 end
 
+@testset "Contracting virtual indices of MPS" begin
+    # A MPS representing a simple basis state
+    mps = basis_state_obc([1;2;3;2;1],3)
+    # The basis states as Julia vectors
+    v1 = zeros(3)
+    v1[1] = 1
+    v2 = zeros(3)
+    v2[2] = 1
+    v3 = zeros(3)
+    v3[3] = 1
+    # The exact state vector
+    state_vector = kron(v1,v2,v3,v2,v1)
+    # The state vector obtained from contracting the virtual indices of the MPS
+    state_vector_mps = contract_virtual_indices(mps)
+    # Check if both are equal
+    @test isapprox(state_vector'*state_vector_mps,1.0+0.0im)
+
+    # Now try with the GHZ state on 10 sites
+    all_zeros = basis_state_obc(ones(Int64, 10))
+    all_ones = basis_state_obc(2*ones(Int64, 10))
+    mps_ghz = sum_states(all_zeros, all_ones)
+    gaugeMPS!(mps_ghz, :left, true)
+    v1 = zeros(2^10)
+    v1[1] = 1
+    v2 = zeros(2^10)
+    v2[end] = 1
+    state_vector_ghz = 1/sqrt(2)*(v1 + v2)
+    state_vector_mps = contract_virtual_indices(mps_ghz)
+    @test isapprox(state_vector_ghz'*state_vector_mps,1.0)
+end
+
 @testset "Test entropy computation" begin
     # A product state should always have vanishing entropy
     mps = random_mps_obc(10, 1, 2)
@@ -121,8 +152,8 @@ end
     @test abs(compute_entropy(mps)) < 1E-12
 
     # Now prepare the GHZ state
-    all_zeros = product_state_obc(BitArray(zeros(Int8, 10)))
-    all_ones = product_state_obc(BitArray(ones(Int8, 10)))
+    all_zeros = basis_state_obc(ones(Int64, 10))
+    all_ones = basis_state_obc(2*ones(Int64, 10))
     mps = sum_states(all_zeros, all_ones)
     gaugeMPS!(mps, :left, true)
     for i = 1:length(mps) - 1
