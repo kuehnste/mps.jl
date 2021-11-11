@@ -686,10 +686,11 @@ function sample_from_mps!(mps::MPS)::Vector{Int64}
             # Prepare the basis state
             basis_state = zeros(d)
             basis_state[l] = 1.0
-            # Contract it into the tensor
+            # Contract it into the physical index of the tensor
             A = contract_tensors(M, [2], basis_state, [1])
+            # Determine the probability for the basis vector e_l
             p = contract_tensors(conj(A), [1], A, [1])
-            pacc += real(p[1])            
+            pacc += real(p[1])
             if r < pacc
                 res[i] = l
                 break
