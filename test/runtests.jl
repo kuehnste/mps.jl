@@ -275,10 +275,10 @@ end
 
 @testset "MPO decompsition" begin
     # Check if erroneous inputs are detected
-    H = zeros(4,5)
+    H = zeros(4, 5)
     @test_throws ArgumentError decompose_into_mpo(H, 2)
-    H = zeros(5,5)
-    @test_throws ArgumentError decompose_into_mpo(H, [2;3])
+    H = zeros(5, 5)
+    @test_throws ArgumentError decompose_into_mpo(H, [2; 3])
     # All local dimensions the same    
     for i = 1:5
         A = rand(2, 2)
