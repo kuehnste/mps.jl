@@ -274,3 +274,26 @@ end
     end
     @test (sum(abs.(prob ./ nsamples - 0.5 * ones(2))) < 1E-2)
 end
+
+@testset "MPO decompsition" begin
+    # All local dimensions the same    
+    for i = 1:5
+        A = rand(2, 2)
+        B = rand(2, 2)
+        C = rand(2, 2)
+        H = kron(A, B, C)
+        mpo = decompose_into_mpo(H, 2)
+        H_mpo = contract_virtual_indices(mpo)
+        @test isapprox(H, H_mpo)
+    end
+    # Different local dimensions
+    for i = 1:10
+        A = rand(2, 2)
+        B = rand(4, 4)
+        C = rand(3, 3)
+        H = kron(A, B, C)
+        mpo = decompose_into_mpo(H, [2; 4; 3])
+        H_mpo = contract_virtual_indices(mpo)
+        @test isapprox(H, H_mpo)
+    end
+end

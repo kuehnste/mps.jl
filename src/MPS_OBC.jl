@@ -762,3 +762,65 @@ function svd_compress_mps(mps::MPS, Dmax::Int, tol::Real = 0.0)
     end
     return res
 end
+
+"""
+    decompose_into_mpo(M::Matrix{T}, d::Vector{Int}) where T <:Number
+
+Given a many-body operator in form of a dense matrix, decompose it into an MPO. It is assumed that the many-body operator follows the index convention of Julia's built-in kronecker product. The vector d specifies the local dimensions of the Hilbert space. 
+
+# Examples
+Decomposing a simple two-site operator made up from sum of Pauli terms into MPO form.
+```julia-repl
+julia>  Id = [1.0 0; 0.0 1.0]
+julia>  X = [0.0 1.0; 1.0 0.0]
+julia>  Z = [1.0 0.0; 0.0 -1.0]
+julia>  H = kron(X,X) + kron(Id,Z) + kron(Z,Id)
+julia>  mpo = decompose_into_mpo(H, 2)
+```
+"""
+function decompose_into_mpo(M::Matrix{T}, d::Vector{Int})::MPO{T} where {T<:Number}
+    N = length(d)
+    dim = prod(d)
+    if size(M) != (prod(d), prod(d))
+        throw(ArgumentError("matrix not compatible with specified local dimensions, got size(M)=$(repr(size(M))), d=$(repr(d))"))
+    end
+    # The MPO holding the result
+    res = MPO{T}(undef, N)
+    # Reshape the matrix and rearrange the indices, such that the row and column index for each site are adjacent and add dummy indices 1 at the boundaries    
+    A = reshape(M, (1, reverse(d)..., reverse(d)..., 1))
+    ind = collect(Iterators.flatten(zip(collect(N:-1:1), collect(2N:-1:N+1))))
+    A = permutedims(A, (1, ind .+ 1..., 2 * length(d) + 2))
+    # Now split it into tensors using an SVD
+    Dl = 1
+    for i = 1:N-1
+        # Take the first three indices together
+        dims = size(A)
+        A = reshape(A, (prod(dims[1:3]), prod(dims[4:end])))
+        # SVD the matrix representation
+        U, S, V = svd(A)
+        A = diagm(S) * V'
+        Dr = size(U, 2)
+        # Extract the tensor and the remaining part
+        U = reshape(U, (Dl, d[i], d[i], Dr))
+        res[i] = permutedims(U, (1, 4, 2, 3))
+        A = reshape(A, (Dr, dims[4:end]...))
+        Dl = Dr
+    end
+    res[N] = permutedims(A, (1, 4, 2, 3))
+
+    return res
+end
+
+"""
+    decompose_into_mpo(M::Matrix{T}, d::Int) where T <:Number
+
+Simplified interface to the more general method assuming that all local dimensions are equal to d.
+"""
+function decompose_into_mpo(M::Matrix{T}, d::Int)::MPO{T} where {T<:Number}
+    dl, dr = size(M)
+    if dr != dr
+        throw(ArgumentError("local dimensions must all be the same, obtained a matrix with dimensions $(repr((dl,dr)))"))
+    end
+    N = Int(round(log(d, dl)))
+    return decompose_into_mpo(M, d * ones(Int64, N))
+end
