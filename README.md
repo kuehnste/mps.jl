@@ -4,7 +4,7 @@ Julia package providing a basic implementation of an MPS code for learning and e
 
 ## Installation
 
-MatrixProductStates is a Julia package and can be installed directly from GitHub. To do so go to the package manager mode via
+MatrixProductStates is a Julia package and can be installed directly from GitHub using Julia's package manager. To do so go to the package manager mode via
 
 ```
 julia> ]
@@ -28,6 +28,44 @@ Afterwards the package can be used via
 julia> using MatrixProductStates
 ```
 
+## Usage
+
+Example codes showcasing basic usage can be found in the folder [examples](https://github.com/kuehnste/mps.jl/tree/main/examples). MPOs for common spin models are provided in /src/operators.jl. Below a few simple code examples are provided.
+
+### Generating an MPS
+
+```julia
+using MatrixProductStates
+let
+    N = 10
+    D = 5
+    d = 3
+
+    mps = random_mps_obc(N, D, d)       # Generate a random MPS with bond dimension D for N sites of dimension d
+
+    mps = basis_state_obc([1;2;3;1])    # Generate a product state |e_1>|e_2>|e_3>|e_1> where |e_i> 
+                                        # are the canoncial basis vectors
+
+    nothing
+end
+```
+
+### Manipulating an MPS
+
+```julia
+using MatrixProductStates
+let
+    N = 10
+    D = 5
+    d = 3
+
+    mps = random_mps_obc(N, D, d)       # Generate a random MPS with bond dimension D for N sites of dimension d
+
+    gaugeMPS!(mps, :left, true)         # Put the random MPS into left canonical form and normalize it
+
+    nothing
+end
+```
 
 ## Indexing convention for tensors
 
