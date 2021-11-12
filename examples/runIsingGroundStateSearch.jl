@@ -23,10 +23,12 @@ H = getIsingMPO(N, J, lambda)
 # Get the MPO for the total spin
 Sz = getTotalSpinMPO(N)
 
+# Run the variational ground state search
 E0, mps, num_of_sweeps = find_groundstate(H, D, d, acc, max_sweeps)
 
+# Print the results
 println("Groundstate energy:            ", E0)
-println("Groundstate energy density:    ", E0/N)
+println("Groundstate energy density:    ", E0 / N)
 println("Number of sweeps:              ", num_of_sweeps)
 println("Total spin:                    ", expectation_value(mps, Sz))
 println("Entropy along center bond      ", compute_entropy(mps))
