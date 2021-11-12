@@ -264,8 +264,10 @@ function contract_virtual_indices(mpo::MPO)::Matrix{<:Number}
     res = permutedims(res, [collect(1:2:ndims(res)); collect(2:2:ndims(res))])
 
     # Now reshape the result accordingly
-    d = 2^Int(round(ndims(res) / 2))
-    res = reshape(res, (d, d))
+    dims = size(res)
+    dr = prod(dims[1:N])
+    dc = prod(dims[N+1:end])
+    res = reshape(res, (dr, dc))
 
     return res
 end
