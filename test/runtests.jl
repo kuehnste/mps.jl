@@ -234,7 +234,6 @@ end
     @test isapprox(calculate_overlap(mps, res3), 16.0)
 end
 
-
 @testset "Sampling from an MPS" begin
     # Some experiments with product states for which the outcome has to be deterministic
     for N = 4:6
@@ -245,7 +244,6 @@ end
             @test isequal(sample, configuration)
         end
     end
-
     # Now prepare the GHZ state
     all_zeros = basis_state_obc(ones(Int64, 4))
     all_ones = basis_state_obc(2 * ones(Int64, 4))
@@ -276,6 +274,11 @@ end
 end
 
 @testset "MPO decompsition" begin
+    # Check if erroneous inputs are detected
+    H = zeros(4,5)
+    @test_throws ArgumentError decompose_into_mpo(H, 2)
+    H = zeros(5,5)
+    @test_throws ArgumentError decompose_into_mpo(H, [2;3])
     # All local dimensions the same    
     for i = 1:5
         A = rand(2, 2)

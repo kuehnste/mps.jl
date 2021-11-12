@@ -818,7 +818,7 @@ Simplified interface to the more general method assuming that all local dimensio
 """
 function decompose_into_mpo(M::Matrix{T}, d::Int)::MPO{T} where {T<:Number}
     dl, dr = size(M)
-    if dr != dr
+    if dl != dr
         throw(ArgumentError("local dimensions must all be the same, obtained a matrix with dimensions $(repr((dl,dr)))"))
     end
     N = Int(round(log(d, dl)))
