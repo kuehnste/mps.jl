@@ -32,36 +32,32 @@ julia> using MatrixProductStates
 
 Example codes showcasing basic usage can be found in the folder [examples](https://github.com/kuehnste/mps.jl/tree/main/examples). MPOs for common spin models are provided in /src/operators.jl. Below a few simple code examples are provided.
 
-### Generating an MPS
+### Generating MPS, manipulating them and computing expectation values and overlaps
+MatrixProductStates provides various functions for generating MPS, the two most important ones being the generation of random MPS and the generation of product states corresponding to a tensor product of canonical basis vectors at each site.  functions for manipulating MPS, the most commonly used operations are putting MPS into left/right canonical form and applying MPOs.
 
 ```julia
 using MatrixProductStates
 let
     N = 10
     D = 5
-    d = 3
+    d = 2
 
-    mps = random_mps_obc(N, D, d)       # Generate a random MPS with bond dimension D for N sites of dimension d
+    mps1 = random_mps_obc(N, D, d)          # Generate a (complex) random MPS with bond dimension D for N sites of dimension d
 
-    mps = basis_state_obc([1;2;3;1])    # Generate a product state |e_1>|e_2>|e_3>|e_1> where |e_i> 
-                                        # are the canoncial basis vectors
+    mps2 = random_mps_obc(N, D, d, Float64) # Generate a random MPS with bond dimension D for N sites of dimension d with entries of type Float64
 
-    nothing
-end
-```
+    mps3 = basis_state_obc([1;2;2;1], 2)    # Generate a product state |e_1>|e_2>|e_3>|e_1> where |e_i> 
+                                            # are the canoncial basis vectors
 
-### Manipulating an MPS
+    gaugeMPS!(mps1, :right)                 # Put mps1 in right canonical form and leave it unnormalized
 
-```julia
-using MatrixProductStates
-let
-    N = 10
-    D = 5
-    d = 3
+    gaugeMPS!(mps2, :left, true)            # Put mps2 in left canonical form and normalize it
+    
+    calculate_overlap(mps1,mps2)            # Compute the overlap <mps1|mps2>
 
-    mps = random_mps_obc(N, D, d)       # Generate a random MPS with bond dimension D for N sites of dimension d
+    mpo = getTotalSpinMPO(N)                # Provide the total spin operator in MPO form
 
-    gaugeMPS!(mps, :left, true)         # Put the random MPS into left canonical form and normalize it
+    expectation_value(mps2, mpo)            # Compute the expectation value of the total spin operator
 
     nothing
 end
