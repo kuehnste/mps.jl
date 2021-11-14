@@ -82,7 +82,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## References
 
-There a vast amount of literature on MPS and more general tensor network methods available. The following incomplete list of reviews and references therein might provide a useful starting point for learning more about MPS and more general tensor networks.
+There is a vast amount of literature on MPS and more general tensor network methods available. The following incomplete list of reviews and references therein might provide a useful starting point for learning more about MPS and more general tensor networks.
 
 * [F. Verstraete, V. Murg, J. Cirac, Adv. Phys. 57, 143 (2008)](https://doi.org/10.1080/14789940801912366)
 * [U. Schollwöck, Ann. Phys. 326, January 2011 Special Issue, 96 (2011)](https://doi.org/10.1016/j.aop.2010.09.012)
