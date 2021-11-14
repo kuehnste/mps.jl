@@ -273,7 +273,7 @@ end
     @test (sum(abs.(prob ./ nsamples - 0.5 * ones(2))) < 1E-2)
 end
 
-@testset "MPO decompsition" begin
+@testset "MPO decomposition" begin
     # Check if erroneous inputs are detected
     H = zeros(4, 5)
     @test_throws ArgumentError decompose_into_mpo(H, 2)
