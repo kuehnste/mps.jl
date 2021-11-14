@@ -71,9 +71,9 @@ end
 
 
 """
-    getIsingMPO(N::Int64,J::Float64,lambda::Float64)
+    getIsingMPO(N::Int,J::Real,lambda::Real)
     
-Function to generate the MPO for the Ising Hamilton of the form -J * sum_{i)X^i X^i+1 - lambda * sum_i Z^i.
+Function to generate the MPO for the Ising Hamilton of the form -J * sum_{i} X^i X^i+1 - lambda * sum_i Z^i.
 """
 function getIsingMPO(N::Int, J::Real, lambda::Real)::MPO{Float64}
     # Provide the Pauli matrices
