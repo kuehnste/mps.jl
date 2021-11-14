@@ -2,6 +2,9 @@
 
 Julia package providing a basic implementation of an MPS code for learning and experimenting.
 
+[![](https://img.shields.io/badge/license-MIT-brightgreen)](https://github.com/kuehnste/mps.jl/blob/main/LICENSE)
+
+
 ## Installation
 
 MatrixProductStates is a Julia package and can be installed directly from GitHub using Julia's package manager. To do so go to the package manager mode via
