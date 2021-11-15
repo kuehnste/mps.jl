@@ -33,7 +33,7 @@ julia> using MatrixProductStates
 
 ## Usage
 
-Example codes showcasing basic usage can be found in the folder [examples](https://github.com/kuehnste/mps.jl/tree/main/examples). MPOs for common spin models are provided in /src/operators.jl. Below a few simple code examples are provided.
+Example codes showcasing basic usage can be found in the folder [examples](https://github.com/kuehnste/mps.jl/tree/main/examples). MPOs for common spin models are provided in [src/operators.jl.](https://github.com/kuehnste/mps.jl/blob/main/src/operators.jl) Below a few simple code examples are provided.
 
 ### Generating MPS, manipulating them and computing expectation values and overlaps
 MatrixProductStates provides various functions for generating MPS, the two most important ones being the generation of random MPS and the generation of product states corresponding to a tensor product of canonical basis vectors at each site.  functions for manipulating MPS, the most commonly used operations are putting MPS into left/right canonical form and applying MPOs.
