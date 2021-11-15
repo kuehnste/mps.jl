@@ -168,9 +168,7 @@ end
     J = 0.9
     lambda = 1.1
     ising_mpo = getIsingMPO(4, J, lambda)
-    Id = [1.0 0; 0.0 1.0]
-    X = [0.0 1.0; 1.0 0.0]
-    Z = [1.0 0.0; 0.0 -1.0]
+    Id, X, _, Z = getPauliMatrices()
     Hising = -J * (kron(X, X, Id, Id) + kron(Id, X, X, Id) + kron(Id, Id, X, X)) - lambda * (kron(Z, Id, Id, Id) + kron(Id, Z, Id, Id) + kron(Id, Id, Z, Id) + kron(Id, Id, Id, Z))
     Hising_mpo = contract_virtual_indices(ising_mpo)
     @test isapprox(Hising, Hising_mpo)

@@ -39,9 +39,7 @@ let
     =#
 
     # The required Pauli matrices for building the evolution MPOs
-    Id = [1.0 0; 0.0 1.0]
-    X = [0.0 1.0; 1.0 0.0]
-    Z = [1.0 0.0; 0.0 -1.0]
+    Id, X, _, Z = getPauliMatrices()
     # Prepare the matrix representation for the different exponentials appearing in the odd-even decomposition
     Uloc_left_boundary = exp(-dt * (-J * kron(X, X) - lambda * kron(Z, Id) - 0.5 * lambda * kron(Id, Z)))
     Uloc_center = exp(-dt * (-J * kron(X, X) - 0.5 * lambda * (kron(Z, Id) + kron(Id, Z))))
@@ -89,7 +87,7 @@ let
     psi = random_mps_obc(N, D, d, Float64)
     gaugeMPS!(psi, :left, true)
     for i = 1:nsteps
-        print("\r Step: ", i)
+        print("\rStep: ", i)
         # Apply the evolution operators
         psi = apply_operator(Uodd, psi)
         psi = apply_operator(Ueven, psi)
