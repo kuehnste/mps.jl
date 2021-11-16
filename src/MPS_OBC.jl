@@ -718,11 +718,11 @@ function sample_from_mps(mps::MPS)::Vector{Int64}
 end
 
 """
-    svd_compress_mps(mps::MPS, Dmax::Int)::Vector{Int64}
+    svd_compress_mps(mps::MPS, Dmax::Int,, tol::Real = 0.0)::MPS
 
 Compress a given MPS applying an a singular value decomposition at each bond. If Dmax > 0 is supplied (and simultaneously tol = 0.0), a maximum of Dmax singular values is kept, thus truncating the MPS to one with maximum bond dimension Dmax. If tol > 0 is given (and simultaneously Dmax = 0) then all singular values > tol are kept. If both are specified then at most Dmax singular values > tol are kept.
 """
-function svd_compress_mps(mps::MPS, Dmax::Int, tol::Real = 0.0)
+function svd_compress_mps(mps::MPS, Dmax::Int, tol::Real = 0.0)::MPS
     # One of the two parameters has to be larger than zero
     @assert((Dmax > 0) || (tol > 0))
     # Extract the length and prepare a result
